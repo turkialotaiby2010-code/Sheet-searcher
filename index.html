@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ابحث رقم الهوية او اسم الطالب</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 50px;
+      margin: 0;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    input[type="file"], input[type="text"] {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      width: 100%;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background-color: #007bff;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background-color 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #007bff;
+      color: white;
+    }
+
+    footer {
+      position: fixed;
+      bottom: 10px;
+      right: 20px;
+      font-size: 14px;
+      color: #555;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>📘 ابحث رقم الهوية او اسم الطالب</h2>
+    <input type="file" id="excelFile" accept=".xlsx, .xls" />
+    <input type="text" id="searchInput" placeholder="ابحث برقم الهوية أو اسم الطالب" />
+    <button onclick="searchStudent()">ابحث</button>
+    <div id="result"></div>
+  </div>
+
+  <footer>
+    Made by <strong>Turki Mohsen Alotaibi</strong>
+  </footer>
+
+  <script>
+    let studentData = [];
+
+    // Handle file upload
+    document.getElementById('excelFile').addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        studentData = XLSX.utils.sheet_to_json(sheet);
+        alert('✅ تم رفع الملف بنجاح! يمكنك الآن البحث برقم الهوية أو اسم الطالب.');
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    // Search students
+    function searchStudent() {
+      const input = document.getElementById('searchInput').value.trim().toLowerCase();
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = '';
+
+      if (!input) {
+        resultDiv.innerHTML = '<p>يرجى إدخال رقم الهوية أو اسم الطالب</p>';
+        return;
+      }
+
+      const matches = studentData.filter(row => 
+        Object.values(row).some(value => 
+          String(value).toLowerCase().includes(input)
+        )
+      );
+
+      if (matches.length === 0) {
+        resultDiv.innerHTML = '<p style="color:red;">لم يتم العثور على الطالب 😕</p>';
+        return;
+      }
+
+      let table = '<table><tr>';
+      Object.keys(matches[0]).forEach(key => table += `<th>${key}</th>`);
+      table += '</tr>';
+      matches.forEach(student => {
+        table += '<tr>';
+        Object.values(student).forEach(val => table += `<td>${val}</td>`);
+        table += '</tr>';
+      });
+      table += '</table>';
+
+      resultDiv.innerHTML = table;
+    }
+  </script>
+</body>
+</html>
